@@ -1,0 +1,54 @@
+12/26/20
+
+Run arduino IDE
+Resume tutorials at 1.3 
+
+
+----------------------------------------------
+
+12/25/20
+
+/ Make github repo for my arduino materials
+Pull ubunto package to install it
+/ Continue reading 1.2 First know arduino
+	Identify all pieces of the board
+		GND: ground (https://www.techopedia.com/definition/11566/ground-gnd)
+			- In electrical circuits: reference point for all signals or a common path in a circuit from which to measure voltages. Aka common drain, as voltage measurement along it is 0
+			- As safety feature: earth ground, connection of electrical equipment to ground to prevent user contact with high voltages, like the grounding rods to the ground from household appliances to the floor
+		PWM: pulse width modulation (https://barrgroup.com/embedded-systems/how-to/pwm-pulse-width-modulation)
+			- Way to digitally encode analog signal levels; can reduce power consumption. Analog signals have continuously varying value, infinite resolution in both time and magnitude. Contrast, digital always take value from finite set of predetermined possibilities. With PWM, duty cycle of square wave is modulated to encode specific analog signal level; PWM signal is digital, at any moment DC supply is fully on or fully off
+/ Install arduino IDE
+			
+
+----------------------------------------------
+
+12/24/20
+
+/ 1. Skim contents of tutorial download folder
+	Tutorial to follow
+	Code of example programs from tutorial chapters to launch on arduino
+	Libraries for certain programs, described in ch 1 of tutorial
+2. Skim tutorial sections
+	Part 1. Preparation
+		Packing list
+		First look arduino
+		For mac and ubuntu building dev environment
+		Blink and add libraries
+	Part 2. Module learning
+		Lots: LED, RGB LED, digital inputs, serial monitor, active buzzer...
+	Part 3. Multi-module combination course
+		Thermometer, serial monitor, photocell, for digit seven segment display
+3. Begin working through tutorial
+	1.2 First look arduino
+		Input examples: acceleration, steering, button push, twitter msg, light on sensor
+		Output examples: activate motor, turn on led, publish something online
+		Arduino programming language - based on Wiring
+		Arduino software IDE - based on Processing
+
+----------------------------------------------
+
+12/20/20
+
+/ 1. Identify every piece in the kit from the diagram in the case
+/ 2. Download tutorial
+3. Skim all of tutorial
