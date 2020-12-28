@@ -1,8 +1,105 @@
+12/28/20
+
+2.4 Serial Monitor: terminal for Arduino, establishes serial connection to the board
+	Accessed from buttin in Arduino IDE: successfully opened it
+	Does not have extensive settings that would be needed for advanced serial comms
+	Baud rate: speed of data transmission (https://www.easytechjunkie.com/what-is-a-baud-rate.htm)
+		Baud = gross bit rate / bits per second
+		Bit rate = bits per symbol * symbol rate
+		In binary comms, baud rate and bit rate are equal
+
+2.5 Active buzzer
+	Electronic buzzers: DC powered, have IC
+		Active: has built-in oscillating source, so generates source when electrified
+		Passive: no source, so no sound if DC signal used. Needs square waves of frequency 2k-5k to drive it
+	unsigned char = 1 byte = 8 bits = 2^8 possible values = 256 possible values (0-255)
+	Sketch loaded: makes continuous sound, alternating between the two pitches in the loop
+		Pitch looks to depend on delay() having either 1 or 2 and param 
+
+
+
+QUESTIONS
+	Why does Arduino's pinmode() have INPUT_PULLUP as an option, but not something for a pull-down resistor?
+	How does the pitch of the sound in 2.5 Active Buzzer vary, input 12 is not PWM?
+
+
+----------------------------------------------
+
+12/27/20
+
+2.2 RGB LED
+	Overview
+		Cathode-Ground-Negative
+		Anode-Source-Positive
+	Component Introduction
+		This type of RGB LED is common cathode: the three LEDs in it share one ground connection
+		Each of the three LED color lights has its own anode (positive) connection
+	Theory: PWM
+		Pulse Width Modulation: way to control power; makes digital wave pattern have effect of analog
+		The pulse is still only ever high or low, but power going over it is moderated by how much time it spends high
+		eg if output is at 5V for 90% of the time (high width of pulse), load gets 90% of power; so looks brigher than one high 5% of time (low width of pulse)
+	Connection schematic: assemble
+	Code: load onto uno and run
+		Note: could only get the connections to work holding resistors in place by hand. Unexpectedly, it seemed that eg the red one would only show when its resistor was pressed down, odd since the resister would be expected to reduce the power to that color
+	Code: read it and the commentary in the pdf
+		Put into sublime, this sketch is 82 lines
+		Defined constant eg "#define BLUE 3": compiler replaces string BLUE with 3
+		pinmode() sets pin to be either input or output
+		int is 16-bit (2 byte) value, between -38,768 ie -2^15 and 38,767 ie (2^15)-1
+
+2.3 Digital Inputs
+	/ Overview: push different buttons to turn LED on or off
+	/ Assemble, load code: works
+	/ Look at circuit diagram: trace how it is implemented on the board
+		Each switch's right side and the LED have a connection to board's "-" line
+		Board's "-" line has one connection to uno's GND
+		Left side of each switch connects to a digital input/output on the uno
+		A wire goes from the uno, through resistor, then to LED's anode (+) side
+	/ Read code more thoroughly: both syntax and how relates to diagram and board
+		This sketch is tiny, <20 loc
+		Button pinmode() defined as INPUT_PULLUP: activates pullup resistors built onto chip
+			https://www.arduino.cc/en/Tutorial/Foundations/DigitalPins
+		Pullup resistor: makes default state of the digital pin HIGH
+		There is a pull-down resistor to make default state LOW, but it is not an option for pinmode()
+			https://circuitdigest.com/tutorial/pull-up-and-pull-down-resistor
+
+----------------------------------------------
+
 12/26/20
 
-Run arduino IDE
-Resume tutorials at 1.3 
+/ Get repo to push, with only my own notes file, no docs
+/ Resume tutorials at 1.4 Building IDE for ubuntu
+	/ Open arduino IDE: it opens
+1.5 Blink and add libraries
+	A. Find Blink sketch in IDE: File > Examples > 01.Basics
+	Run saved version of it: ERROR
+		
+		"avrdude: ser_open(): can't open device "/dev/ttyACM0": Permission denied
+		Problem uploading to board.  See http://www.arduino.cc/en/Guide/Troubleshooting#upload for suggestions."
 
+		Move MyBlink from project repo to Arduino program location: same error
+		Info from http://www.arduino.cc/en/Guide/Troubleshooting#upload
+			Error text not on Uploads section (https://support.arduino.cc/hc/en-us/sections/360003198300-Upload)
+			Anything on that page that looks releated? yes
+			'Error opening serial port' page
+				$ ll /dev/ttyACM*
+					-> crw-rw---- 1 root dialout 166, 0 Dec 26 11:56 /dev/ttyACM0
+				'dialout' is group owner, need to add our user to that group
+				$ sudo usermod -aG dialout laura
+				$ getent group dialout
+					-> dialout:x:20:laura
+			But still same error
+		After restart of Arduino IDE, same 'can't open device' error
+		Try Upload with board disconnected: same error
+		After disconnect/reconnect board USB cable: same error
+		After restart laptop: works!
+	B. Add library from zip: Part 2 Module Learning > Passive Buzzer > patches.zip > OK
+		Appears in Sketch > Include Library > 'Contributed libraries' section
+	C. Add library from Library Manager: Audio; shows as installed in the manager window
+		When selected to include it in sketch, also adds "#include <DAC.h>"
+Part 2: Module Learning, 12 sections total
+2.1 LED Module: change brightness of LED via different resistance transistors
+	Got this working
 
 ----------------------------------------------
 
@@ -19,7 +116,6 @@ Pull ubunto package to install it
 			- Way to digitally encode analog signal levels; can reduce power consumption. Analog signals have continuously varying value, infinite resolution in both time and magnitude. Contrast, digital always take value from finite set of predetermined possibilities. With PWM, duty cycle of square wave is modulated to encode specific analog signal level; PWM signal is digital, at any moment DC supply is fully on or fully off
 / Install arduino IDE
 			
-
 ----------------------------------------------
 
 12/24/20
