@@ -1,3 +1,84 @@
+QUESTIONS
+	1. Why does Arduino's pinmode() have INPUT_PULLUP as an option (in addition to INPUT and OUTPUT), but no option for a pull-down resistor?
+	2. In 2.5 Active Buzzer, does faster high/low alternation  means higher pitch?
+	3. Why does 2.5 Active buzzer use a not PWM pin for output?
+	4. Is there any difference between the GND in the Arduino's Power versus Digital sections?
+	5. (Might be too much of a tangent) I've read the basic definitions, but could we do a talk-through of "*var" dereference operator, "&var" reference operator, and "string* var" pointer declaration to get a better handle on those?
+	6. In 3.1, why does the resistor go into the ground bus? Would a less strong transistor allow more current (unsure which is correct term) to go to ground?
+
+----------------------------------------------
+
+12/31/20
+
+3.1 Thermometer
+	Potentiometer: three-terminal resistor with sliding or rotating contact that forms an adjustable voltage divider
+	PTC thermistor: often used in resettable fuses, as their temp increases with more electricity going through them, and their higher temp reduces the current
+	*Try this setup at first looking only at circuit diagram*
+	Do breadboard connections go across ravine? No
+		Useful overview: https://www.seeedstudio.com/blog/2020/01/06/how-to-use-a-breadboard-wiring-circuit-and-arduino-interfacing/
+	After initial attempt at setup from diagram only: weird, illustration has it across ravine
+	Revised with looking at illustration; needed this a lot
+	Recap of what non-obvious connection points are doing
+		Arduino
+			A0: to thermister and resistor, is an analog in, ie reads analog sensors
+			analog in info: https://www.arduino.cc/en/Tutorial/Foundations/AnalogInputPins
+				A/D conversion is to 10 bit resolution, values 0-1023
+		Thermister
+			Side one: to Arduino analog input, and resistor
+			Side two: to power bus, power going through it changes its temp
+		Potentiometer: changes amount of voltage allowed through
+			ie gets power from input, some to OTHER SIDE of breadboard, to LCD V0, rest to ground
+			On breadboard side one: horizontal to LCD V0, the 'work' through
+			On breadboard side two: source, ground
+		Resistor:
+			Flow around it is: Arduino source, breadboard power bus, thermister one side, thermister other side, Arduino analog input + 10 ohm resistor going to breadboard ground
+			-> how does the resistor in this case affect how much reaches Arduino analong in?
+		LCD: see http://wiki.sunfounder.cc/index.php?title=LCD1602_Module
+			note: also has projects with it for raspberry pi
+	Load code, run it: REDO NEEDED, LCD does not turn on
+	Dismantle
+	Build again from scratch, from diagram and illustration
+
+
+
+----------------------------------------------
+
+12/30/20
+
+2.12 IR Receiver
+	IR detector: small microchips with photocell tuned to look for IR light
+	Its remote control has a matching IR LED that emits pulses as messages
+	Just shining an IR light at detector won't work, must be PWM blinking at 38KHz
+	IR detectors are digital out
+	Peak detection is at LED light frequency 940 nm, frequency 38KHz; drops off farther from those values
+	IDE setup: 
+		/ Add libraries from zip: IR_Receiver_Module, IRremote
+		Also must temporarily MOVE a conflicting library: RobotIRremote
+			its location: laura/arduino-1.8.13/libraries/RobotIRremote
+			moved to: laura/arduino-1.8.13/libraries_temp/RobotIRremote
+		Then restart IDE
+	Notes on code:
+		Uses object from libraries 'decode_results' to map hex to meaning, rather than case/switch for each hex value
+		Infinite loop repeats to check if IRrecv has received a value; frequency of asking it not clear
+	Run sketch: when remote buttons pressed, prints to terminal (actual is on newlines)
+		IRIR Receiver Button Decode
+		6, PAUS, 7
+	Move RobotIRremote back to Arduino libraries
+
+2.13 LCD Display
+	LDC component pins (some of them)
+		VSS: connects to ground
+		VDD: connects to +5V power supply
+		RS: register select pin to set where in LCD;s memory to write data: either data register (holds what is displayed on screen) or instruction register (where LCD's controller looks for instructions on what to do next)
+		E: enabling pin that when supplied with low-level energy causes the LCD module to execute instructions
+	Notes upon loading: MUST ADJUST THE DIAL FOR LCD TO SHOW LETTERS, initally was all dark
+
+2.14 DC Motors
+	Most complex wires setup; many joins with breadboard's power and ground
+	Directions not explicit about battery: it goes to the power input of the modulator on the breadboard 
+	
+----------------------------------------------
+
 12/28/20
 
 2.4 Serial Monitor: terminal for Arduino, establishes serial connection to the board
@@ -14,14 +95,114 @@
 		Passive: no source, so no sound if DC signal used. Needs square waves of frequency 2k-5k to drive it
 	unsigned char = 1 byte = 8 bits = 2^8 possible values = 256 possible values (0-255)
 	Sketch loaded: makes continuous sound, alternating between the two pitches in the loop
-		Pitch looks to depend on delay() having either 1 or 2 and param 
+	Use of pin 12, which is not PWM
+		Pin 12 is an OUTPUT for the buzzer, only other connection is to GND
+		The Active buzzer does not need any input from the board
+	***code looks weird because indents are off in code file***
+		-> for loops are NOT nested, they are sequential
+	Repeats first loop 80 times: buzzer at high and low for 1ms each
+		time in loop 1: 80*1*2 = 80 ms
+		faster high/low alternation = higher pitch
+	Then repeats second loop 100 times: buzzer at high and low for 2ms each
+		time in loop 2: 100*2*2 = 200ms
+	Effect: 
+		Sounds like two different piches, I'm not able to hear if higher or lower pitch lasts longer
+
+	##############################
+	//output a frequency		
+	for(i=0;i<80;i++) {
+    	digitalWrite(buzzer,HIGH);
+    	delay(1);//wait for 1ms
+    	digitalWrite(buzzer,LOW);
+    	delay(1);//wait for 1ms
+    }
+
+    //output another frequency
+    for(i=0;i<100;i++) {
+        digitalWrite(buzzer,HIGH);
+        delay(2);//wait for 2ms
+        digitalWrite(buzzer,LOW);
+        delay(2);//wait for 2ms
+    }
+    ##############################
 
 
+2.6 Passive Buzzer
+	Generate 8 different sounds
+		Alto Do(523Hz), Re(587Hz), Mi(659Hz), Fa(698Hz), So(784Hz), La(880Hz), Si(988Hz), Treble Do(1047Hz)
+						+64        +72        +39        +86        +96        +108       +59
+		Treble Do = Alto Do Hz * 2
+	Passive buzzer: use PWM to make air vibrate ie generate different sounds
+	Must install pitches library
+		Use add from zip option
+	Plays, and is very loud
+	Notes on code: uses arrays, C++ syntax
+	pitches.h has around 90 defined constants, eg "#define NOTE_C1  33"; includes sharps
+		-> the strings are put in the array
+		-> compiler replaces string with its int (frequency), so passes that to tone()
+	tone(pin, frequency, duration)
+		pin and duration are constants, frequency is iterated through melody[] array
 
-QUESTIONS
-	Why does Arduino's pinmode() have INPUT_PULLUP as an option, but not something for a pull-down resistor?
-	How does the pitch of the sound in 2.5 Active Buzzer vary, input 12 is not PWM?
+2.7 Tilt Ball Switch (aka tilt sensor)
+	Detect orientation or inclination
+	Usually have a cavity inside containing conductive free mass, eg mercury blob or rolling ball
+	One end of cavity has two conductive elements (poles)
+	When end with poles is oriented dowhards, mass roles into them and acts as switch throw
+	Different from accelerometer, which output DC or AC that must be analyzed, using electricity
+	Note: no difference between the prongs on tilt ball switch
+	Code:
+		const generally preferred over #define: const makes read only, enforced by compiler error
+		uses the LED built into the board for output
+	Run sketch: when prongs of switch are DOWN, light is ON
 
+2.8 Servo: geared motor that can rotate 180 degrees
+	Has 3 wires: brown is GND, red is power (connect to 5V), orange is signal (connect to Dig #9)
+	Imports a library that has an object for the servo
+	Run sketch: rotates the motor, tilts 30, then 0, then -30
+
+2.9 Ultrasonic Sensor
+	Useful for distance measurements or avoiding obstacles
+	Range for this sensor is 2cm-400cm
+	Components: ultrasonic transmittor, receiver, control circuit
+	How it works: when triggered by high level signal, sends 8 40Hz pulses, listens for echo back
+	Vcc: positive supply voltage to an IC 
+		(https://www.etechnog.com/2019/06/vcc-vss-vdd-vee-in-electronics.html)
+	Like servo, imports a library that has an object for the sensor, eg can do "sensor.Distance()"
+	Run the Sketch: output appears the Serial Monitor
+		-> SUPER NEAT 
+	Interesting: if something is closer than the min 2cm, outputs as 2227cm, over sensor's max range
+
+2.10 Temperature and Humidity Sensor
+	Sensor has its own 8-bit microcontroller; outputs digital signal
+	Three pins: oddly not labeled on the sensor, only in pdf's diagrams
+		DATA serial data on single bux
+		VDD positive power supply voltage (as is Vcc), but for case where voltage pin is connected to drain of transistor (https://www.etechnog.com/2019/06/vcc-vss-vdd-vee-in-electronics.html)
+		GND, negative power
+	Writes output to Serial Monitor again
+		Room temperature shows as 22 deg C (71 F)
+		Humidity varies a lot between 34% - 38%
+		Put sensor under vest: temp went up very slowly, eventually reaching 32 deg C (90 F)
+		Sensor back in room open air, temp changed slowly
+			around 5 readings (20 sec) for 1 deg C decrease
+	Notes on code
+		Static: variable only visible to one function, but its data persists between calls to that function
+		bool data type is described oddly, "Range:0~2^32"
+			C++ boolean is stored as int, 0 or 1, so its size is 2^32
+			(https://www.learncpp.com/cpp-tutorial/boolean-values/)
+		"*" in expression eg "measure_environment( float *temperature, float *humidity )"
+			Dereference operator, ie get reference (value) from a pointer
+		"&" in expression eg "measure_environment( &temperature, &humidity )"
+			Reference operator: means addressof, create a pointer from a reference or variable
+			(https://www.w3schools.com/cpp/cpp_pointers_dereference.asp)
+		But when * used in variable declaration (eg "string* ptr"), creates pointer variable
+
+2.11 Analog Joystick
+	Analog pins read the X and Y inputs; digital reads the button
+	Button connects to ground when pressed down; must connect to VCC (positive source) via pull-up resistor
+	Only determined from reading sketch's code: X on joystick to pin A0, Y to pin A1
+	View output in serial monitor
+		in neutral, X and Y are around 505 and switch is 1
+		pressing button makes switch 0; got all four corners, upper left (0,0), lower right (1023,1023)
 
 ----------------------------------------------
 
