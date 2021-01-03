@@ -4,7 +4,82 @@ QUESTIONS
 	3. Why does 2.5 Active buzzer use a not PWM pin for output?
 	4. Is there any difference between the GND in the Arduino's Power versus Digital sections?
 	5. (Might be too much of a tangent) I've read the basic definitions, but could we do a talk-through of "*var" dereference operator, "&var" reference operator, and "string* var" pointer declaration to get a better handle on those?
-	6. In 3.1, why does the resistor go into the ground bus? Would a less strong transistor allow more current (unsure which is correct term) to go to ground?
+
+----------------------------------------------
+
+1/3/21
+
+3.5 Four digit seven segment display
+	Interesting: four digit LED takes 23 M-M wires, single digit took 26; speculation is code does more in this setup
+	'Persistence of vision' in component introduction? "Enables you to see all numbers displayed because each the scanning speed is so fast that you can hardly notice the intervals"
+		-> interpretation: only one of the numbers is illuminated at a time, but transition between the four is so fast all look illuminated consistently
+	nb: pdf shows 4-segment display as 5643A and 5643B, actual part is 5641AS
+	nb: difficult to see where pins are, in middle of LED segment: keep popped up while wiring
+	When sketch loaded: all bars on all digits illuminate EXCEPT top one for each digit
+		Check where this is wired; verify wires are connected correctly and tight
+		Top one is LED bar A: from pdf for 3.2 on single digit, it's IC's top second from left
+		Connection schematic: LED bar A control is its pin 11
+			LED shows all pins 1-12 along its top, so difficult to tell which is which
+			Look at hard to see orientation of 1-12 in the 6 top/bottom setup:
+				-> resistors are pins #6, 8, 9, 12
+				PATTERN: start lower left, counterclockwise so 12 is upper left
+				-> this way, pin 11 is top second from left
+				which matches the wiring diagram...
+		So: my setup, connection schematic, and wiring diagram all match
+		Something in code?
+			Looks like it is supposed to display numbers 1-15?
+			What I got was each digit displaying the same digit 1-9... ???
+	TEAR OUT, TRY ONCE MORE
+		Any new obervations? Nope. Did begin with the IC connections, which are most complex
+		Load sketch onto second setup:
+			Now top bar lights up as expected, all digits show same thing, 1-9 then A-F
+
+3.6 Relay
+	An elecrically operated switch
+	Works upon sketch load; fan though pushes air towards its shaft, not away as expected
+	**read this more thoroughly after next lesson**
+
+3.7 Controlling Stepper Motor with Remote
+	Initially had not plugged in 9V battery, then worked
+
+----------------------------------------------
+
+1/1/21
+
+3.4 Photocell
+	LEDs: shorter, negative end goes to ground
+	**Code and connection schematic show Arduino pin 9 (wiring diagram shows 10, disregarding that)**
+	Try loading to Aruduino
+		NOT GOOD: when plug in Arduino, its power indicator comes on then slowly dims out
+		Attaching pins to it one at a time, it is the 5V connection that causes it to dim out
+		-> something wrong with current flow in wiring setup
+	Reread lesson 1, which way do LEDs go: yes, short to ground
+	Is the IC board in the correct orientation: NO IT IS UPSIDE DOWN
+	Flip the IC: now works
+	Phone flashlight over 1.5 feet away means no lights, then 2" away goes up to 7 lights
+
+3.3 Serial Monitor
+	Timeboxed debug of this, 25 min
+		Reread 3.2 setup
+			Connection schematic p3 in the segment display there are two F's and no E
+			Otherwise does match the pin-to-LED-segment image on p2
+			Deduction: connections between IC and LEDs are all correct, since 3.2 works
+			*issue thus between IC and Arduino: only 3 connections*
+				Rechecked those match BOTH schematic and wiring diagram
+		Reread 3.2 code
+			***these correspond to the ARDUINO numbers, not IC numbers***
+			***completely different from the 3.3 settings
+
+			int latchPin = 3;    // connect to the ST_CP of 74HC595 (pin 3,latch pin)
+			int clockPin = 4;    // connect to the SH_CP of 74HC595 (pin 4, clock pin)
+			int dataPin = 2;    // connect to the DS of 74HC595 (pin 2)
+		Reread 3.3 setup
+		Reread 3.3 code
+			int latchPin = 11;
+			int clockPin = 9;
+			int dataPin = 12;
+	Try: set 3.3 code to use pin assignments as in 3.2
+		-> WORKS :) :) :)
 
 ----------------------------------------------
 
@@ -28,7 +103,7 @@ QUESTIONS
 			Side two: to power bus, power going through it changes its temp
 		Potentiometer: changes amount of voltage allowed through
 			ie gets power from input, some to OTHER SIDE of breadboard, to LCD V0, rest to ground
-			On breadboard side one: horizontal to LCD V0, the 'work' through
+			On breadboard side one: horizontal to LCD V0, the 'work' that goes through
 			On breadboard side two: source, ground
 		Resistor:
 			Flow around it is: Arduino source, breadboard power bus, thermister one side, thermister other side, Arduino analog input + 10 ohm resistor going to breadboard ground
@@ -38,7 +113,62 @@ QUESTIONS
 	Load code, run it: REDO NEEDED, LCD does not turn on
 	Dismantle
 	Build again from scratch, from diagram and illustration
+	
+	Jim pointers
+		Rails: the + / - across whole breadboard
+		Be aware: electrical engineers use different terms than either physics or math
+			eg sqrt(-1) in EE is 'J' since they already use 'I' for current
+		Rule zero of EE: is it plugged in
+		Rule one of EE: might have destroyed device
 
+	Loading sketch after rebuild and recheck
+	***it was missing GND rail to Arduino GND connection***
+	First with 3.3V: now works
+	Temp reading seems off though, shows room as 13C (55F), pinching it only goes to 16C
+	Change to 5V: LCD displays all white blocks; re-upload sketch
+	INTERESTING: now at 5V temp shows as a more reasonable 22C, AND the LCD display is visible at a more middle setting of the potentiometer
+		-> 5V is correct for this project
+	(while unplugged) swap 10K ohm resistor for 100K ohm
+		SURPRISING: temp reads as way higher, 77C
+	Increases temp:
+		Greater resistance between thermister output and ground (so more goes to Arudino analog input)
+		Greater voltage as input to the thermister
+	Read code: placing items on LCD screen is done by lcd.setCursor() then lcd.print()
+
+3.2 74HC595 [shift register] and Segment Display
+	Went super smoothly
+	Neat how each of the seven LED lines that forms the digit is represented as a bit
+
+3.3 Serial Monitor
+	Use serial monitor to control LEDs
+	Not clear: says to redo setup as in Part 2 Lesson 22, do not see that
+		Try re-opening the original zip file: 2 module learning only goes to 13
+		Search for elegoo arduino lesson 22 part 2: no
+	Decision: from reading instructions, is referring to the single-digit, 7-LED
+		-> use the setup from 3.2 [whew left it set up]
+	Load sketch, open serial monitor: LEDs do not respond to instructions
+	When 'send' an instruction, on Arduino TX and RX blink
+	Strangely, walked back to it after a while, and only some were on/off
+	Reload sketch from 3.2, check it still works: yes, perfectly
+	Recheck if there was ANY change to board for this section: no
+	Restart Arduino IDE, reload sketch: no change
+	Read comments in sketch code for clues; it refers to particular IC locations
+		-> beware since its reference to lesson numbers was off too
+		Settings for IC in sketch:
+			latchPin: concurrency control, only transmit when this is 'LOW' = 11
+			clockPin: toggle once data pin has been set to correct value = 9
+			dataPin: pin on which to output each bit = 12
+	nb: LEDs changed again, not consistent with past instructions though		
+		Do they match what's built? IC diagram in 3.2 pdf on p3
+			IC 11 goes to digital 4 on Arduino
+			IC 9: not connected
+			IC 12: to digital 3 on Arduino
+	**missing: clockPin, where should it actually be**
+		try: Arduino digital 2 connects to IC 14
+		change clockPin = 14, reload
+			-> no effect
+			Unplug board, restart IDE, retry: no effect
+	Email description to Jim
 
 
 ----------------------------------------------
